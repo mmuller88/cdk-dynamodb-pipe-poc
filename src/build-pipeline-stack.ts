@@ -92,26 +92,37 @@ export class BuildPipelineStack extends core.Stack {
         //     }),
         //   ],
         // },
+        // {
+        //   stageName: 'Dev',
+        //   actions: [
+        //     new codepipeline_actions.CodeBuildAction({
+        //       actionName: `Deploy${props.devStack.stackName}`,
+        //       project: deployDevProject,
+        //       input: cdkBuildOutput,
+        //     }),
+        //   ],
+        // },
         {
           stageName: 'Dev',
           actions: [
-            new codepipeline_actions.CodeBuildAction({
+            new codepipeline_actions.CloudFormationCreateUpdateStackAction({
               actionName: `Deploy${props.devStack.stackName}`,
-              project: deployDevProject,
-              input: cdkBuildOutput,
+              stackName: `Deploy${props.devStack.stackName}`,
+              templatePath: cdkBuildOutput.atPath(`cdk.out/${`Deploy${props.devStack.stackName}`}.template.json`),
+              adminPermissions: true,
             }),
           ],
         },
-        {
-          stageName: 'Prod',
-          actions: [
-            new codepipeline_actions.CodeBuildAction({
-              actionName: `Deploy${props.prodStack.stackName}`,
-              project: deployProdProject,
-              input: cdkBuildOutput,
-            }),
-          ],
-        },
+        // {
+        //   stageName: 'Prod',
+        //   actions: [
+        //     new codepipeline_actions.CodeBuildAction({
+        //       actionName: `Deploy${props.prodStack.stackName}`,
+        //       project: deployProdProject,
+        //       input: cdkBuildOutput,
+        //     }),
+        //   ],
+        // },
       ],
       restartExecutionOnUpdate: true,
     });
