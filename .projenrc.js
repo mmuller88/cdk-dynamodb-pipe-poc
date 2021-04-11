@@ -3,7 +3,8 @@ const { AwsCdkTypeScriptApp } = require('projen');
 const project = new AwsCdkTypeScriptApp({
   authorAddress: 'damadden88@googlemail.de',
   authorName: 'martin.mueller',
-  cdkVersion: '1.89.0',
+  cdkVersion: '1.97.0',
+  cdkVersionPinning: true,
   defaultReleaseBranch: 'main',
   jsiiFqn: 'projen.AwsCdkTypeScriptApp',
   name: 'cdk-dynamodb-pipe-poc',
