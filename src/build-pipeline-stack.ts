@@ -111,6 +111,7 @@ export class BuildPipelineStack extends core.Stack {
               stackName: props.devStack.stackName,
               templatePath: cdkBuildOutput.atPath(`cdk.out/${props.devStack.stackName}.template.json`),
               adminPermissions: true,
+              region: props.devStack.region,
             }),
           ],
         },
