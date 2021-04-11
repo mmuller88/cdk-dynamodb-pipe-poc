@@ -13,20 +13,20 @@ const devEnv = {
   region: 'us-east-1',
 };
 
-const prodEnv = {
-  account: '991829251144',
-  region: 'us-east-1',
-};
+// const prodEnv = {
+//   account: '991829251144',
+//   region: 'us-east-1',
+// };
 
 const app = new core.App();
 
 const ddbDevStack = new GlobalDynamoDBStack(app, 'DdbDev3', { env: devEnv });
-const ddbProdStack = new GlobalDynamoDBStack(app, 'DdbProd', { env: prodEnv });
+// const ddbProdStack = new GlobalDynamoDBStack(app, 'DdbProd', { env: prodEnv });
 
 new BuildPipelineStack(app, 'BuildPipelineStack', {
   env: buildEnv,
   devStack: ddbDevStack,
-  prodStack: ddbProdStack,
+  // prodStack: ddbProdStack,
 });
 
 app.synth();

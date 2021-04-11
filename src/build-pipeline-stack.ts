@@ -6,7 +6,7 @@ import * as core from '@aws-cdk/core';
 
 export interface BuildPipelineStackProps extends core.StackProps {
   devStack: core.Stack;
-  prodStack: core.Stack;
+  prodStack?: core.Stack;
 }
 
 export class BuildPipelineStack extends core.Stack {
@@ -45,11 +45,11 @@ export class BuildPipelineStack extends core.Stack {
       resources: ['*'],
     }));
 
-    const deployProdProject = new codebuild.PipelineProject(this, 'updateStackProd', createUpdateStackSpec(props.prodStack.stackName));
-    deployProdProject.addToRolePolicy(new iam.PolicyStatement({
-      actions: ['*'], // cloudformation:DescribeStacks, ssm:GetParameter
-      resources: ['*'],
-    }));
+    // const deployProdProject = new codebuild.PipelineProject(this, 'updateStackProd', createUpdateStackSpec(props.prodStack.stackName));
+    // deployProdProject.addToRolePolicy(new iam.PolicyStatement({
+    //   actions: ['*'], // cloudformation:DescribeStacks, ssm:GetParameter
+    //   resources: ['*'],
+    // }));
 
     new codepipeline.Pipeline(this, 'BuildPipeline', {
       stages: [
