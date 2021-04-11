@@ -38,6 +38,7 @@ export class BuildPipelineStack extends core.Stack {
 
     const sourceOutput = new codepipeline.Artifact();
     const cdkBuildOutput = new codepipeline.Artifact('CdkBuildOutput');
+    // cdkBuildOutput.
 
     const deployDevProject = new codebuild.PipelineProject(this, 'updateStackDev', createUpdateStackSpec(props.devStack.stackName));
     deployDevProject.addToRolePolicy(new iam.PolicyStatement({
