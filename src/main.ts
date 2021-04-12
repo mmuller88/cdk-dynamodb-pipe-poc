@@ -29,4 +29,8 @@ new BuildPipelineStack(app, 'BuildPipelineStack', {
   // prodStack: ddbProdStack,
 });
 
+// new cfn.CfnInclude(app, 'ddb', {
+//   templateFile: 'cdk.out/DdbDev5.template.json',
+// });
+
 app.synth();
