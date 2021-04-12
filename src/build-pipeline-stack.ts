@@ -22,7 +22,7 @@ export class BuildPipelineStack extends core.Stack {
     });
 
     const cdkBuild = new codebuild.PipelineProject(this, 'CdkBuild', {
-      encryptionKey: pipeline.artifactBucket.encryptionKey,
+      // encryptionKey: pipeline.artifactBucket.encryptionKey,
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
         phases: {
