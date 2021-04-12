@@ -2,6 +2,7 @@ import * as codebuild from '@aws-cdk/aws-codebuild';
 import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
 import * as iam from '@aws-cdk/aws-iam';
+import * as s3 from '@aws-cdk/aws-s3';
 import * as core from '@aws-cdk/core';
 
 export interface BuildPipelineStackProps extends core.StackProps {
@@ -13,7 +14,12 @@ export class BuildPipelineStack extends core.Stack {
   constructor(scope: core.Construct, id: string, props: BuildPipelineStackProps) {
     super(scope, id, props);
 
-    const pipeline = new codepipeline.Pipeline(this, 'BuildPipeline');
+    const pipeline = new codepipeline.Pipeline(this, 'BuildPipeline', {
+      artifactBucket: new s3.Bucket(this, 'pipebbucket', {
+        removalPolicy: core.RemovalPolicy.DESTROY,
+        autoDeleteObjects: true,
+      }),
+    });
 
     const cdkBuild = new codebuild.PipelineProject(this, 'CdkBuild', {
       encryptionKey: pipeline.artifactBucket.encryptionKey,
