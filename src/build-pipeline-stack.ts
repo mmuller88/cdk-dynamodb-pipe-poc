@@ -13,7 +13,10 @@ export class BuildPipelineStack extends core.Stack {
   constructor(scope: core.Construct, id: string, props: BuildPipelineStackProps) {
     super(scope, id, props);
 
+    const pipeline = new codepipeline.Pipeline(this, 'BuildPipeline');
+
     const cdkBuild = new codebuild.PipelineProject(this, 'CdkBuild', {
+      encryptionKey: pipeline.artifactBucket.encryptionKey,
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
         phases: {
@@ -52,82 +55,124 @@ export class BuildPipelineStack extends core.Stack {
     //   resources: ['*'],
     // }));
 
-    new codepipeline.Pipeline(this, 'BuildPipeline', {
-      stages: [
-        {
-          stageName: 'Source',
-          actions: [
-            new codepipeline_actions.GitHubSourceAction({
-              owner: 'mmuller88',
-              repo: 'cdk-dynamodb-pipe-poc',
-              branch: 'main',
-              output: sourceOutput,
-              actionName: 'GitHubSource',
-              oauthToken: core.SecretValue.secretsManager('alfcdk', {
-                jsonField: 'muller88-github-token',
-              }),
-              trigger: codepipeline_actions.GitHubTrigger.WEBHOOK,
-            }),
-          ],
-        },
-        {
-          stageName: 'Build',
-          actions: [
-            new codepipeline_actions.CodeBuildAction({
-              actionName: 'CDK_Build',
-              project: cdkBuild,
-              input: sourceOutput,
-              outputs: [cdkBuildOutput],
-            }),
-          ],
-        },
-        // I saw that in the web about self mutating the pipeline. But please don't use it or be very causes.
-        // {
-        //   stageName: 'UpdatePipeline',
-        //   actions: [
-        //     new codepipeline_actions.CloudFormationCreateUpdateStackAction({
-        //       actionName: 'AdministerPipeline',
-        //       templatePath: cdkBuildOutput.atPath(`${this.stackName}.template.json`),
-        //       stackName: this.stackName,
-        //       adminPermissions: true,
-        //     }),
-        //   ],
-        // },
-        // {
-        //   stageName: 'Dev',
-        //   actions: [
-        //     new codepipeline_actions.CodeBuildAction({
-        //       actionName: `Deploy${props.devStack.stackName}`,
-        //       project: deployDevProject,
-        //       input: cdkBuildOutput,
-        //     }),
-        //   ],
-        // },
-        {
-          stageName: 'Dev',
-          actions: [
-            new codepipeline_actions.CloudFormationCreateUpdateStackAction({
-              actionName: props.devStack.stackName,
-              stackName: props.devStack.stackName,
-              templatePath: cdkBuildOutput.atPath(`cdk.out/${props.devStack.stackName}.template.json`),
-              adminPermissions: true,
-              region: props.devStack.region,
-            }),
-          ],
-        },
-        // {
-        //   stageName: 'Prod',
-        //   actions: [
-        //     new codepipeline_actions.CodeBuildAction({
-        //       actionName: `Deploy${props.prodStack.stackName}`,
-        //       project: deployProdProject,
-        //       input: cdkBuildOutput,
-        //     }),
-        //   ],
-        // },
+    pipeline.addStage({
+      stageName: 'Source',
+      actions: [
+        new codepipeline_actions.GitHubSourceAction({
+          owner: 'mmuller88',
+          repo: 'cdk-dynamodb-pipe-poc',
+          branch: 'main',
+          output: sourceOutput,
+          actionName: 'GitHubSource',
+          oauthToken: core.SecretValue.secretsManager('alfcdk', {
+            jsonField: 'muller88-github-token',
+          }),
+          trigger: codepipeline_actions.GitHubTrigger.WEBHOOK,
+        }),
       ],
-      restartExecutionOnUpdate: true,
     });
+
+    pipeline.addStage({
+      stageName: 'Build',
+      actions: [
+        new codepipeline_actions.CodeBuildAction({
+          actionName: 'CDK_Build',
+          project: cdkBuild,
+          input: sourceOutput,
+          outputs: [cdkBuildOutput],
+        }),
+      ],
+    });
+
+    pipeline.addStage({
+      stageName: 'Dev',
+      actions: [
+        new codepipeline_actions.CloudFormationCreateUpdateStackAction({
+          actionName: props.devStack.stackName,
+          stackName: props.devStack.stackName,
+          templatePath: cdkBuildOutput.atPath(`cdk.out/${props.devStack.stackName}.template.json`),
+          adminPermissions: true,
+          region: props.devStack.region,
+        }),
+      ],
+    });
+
+    //   new codepipeline.Pipeline(this, 'BuildPipeline', {
+    //     stages: [
+    //       {
+    //         stageName: 'Source',
+    //         actions: [
+    //           new codepipeline_actions.GitHubSourceAction({
+    //             owner: 'mmuller88',
+    //             repo: 'cdk-dynamodb-pipe-poc',
+    //             branch: 'main',
+    //             output: sourceOutput,
+    //             actionName: 'GitHubSource',
+    //             oauthToken: core.SecretValue.secretsManager('alfcdk', {
+    //               jsonField: 'muller88-github-token',
+    //             }),
+    //             trigger: codepipeline_actions.GitHubTrigger.WEBHOOK,
+    //           }),
+    //         ],
+    //       },
+    //       {
+    //         stageName: 'Build',
+    //         actions: [
+    //           new codepipeline_actions.CodeBuildAction({
+    //             actionName: 'CDK_Build',
+    //             project: cdkBuild,
+    //             input: sourceOutput,
+    //             outputs: [cdkBuildOutput],
+    //           }),
+    //         ],
+    //       },
+    //       // I saw that in the web about self mutating the pipeline. But please don't use it or be very causes.
+    //       // {
+    //       //   stageName: 'UpdatePipeline',
+    //       //   actions: [
+    //       //     new codepipeline_actions.CloudFormationCreateUpdateStackAction({
+    //       //       actionName: 'AdministerPipeline',
+    //       //       templatePath: cdkBuildOutput.atPath(`${this.stackName}.template.json`),
+    //       //       stackName: this.stackName,
+    //       //       adminPermissions: true,
+    //       //     }),
+    //       //   ],
+    //       // },
+    //       // {
+    //       //   stageName: 'Dev',
+    //       //   actions: [
+    //       //     new codepipeline_actions.CodeBuildAction({
+    //       //       actionName: `Deploy${props.devStack.stackName}`,
+    //       //       project: deployDevProject,
+    //       //       input: cdkBuildOutput,
+    //       //     }),
+    //       //   ],
+    //       // },
+    //       {
+    //         stageName: 'Dev',
+    //         actions: [
+    //           new codepipeline_actions.CloudFormationCreateUpdateStackAction({
+    //             actionName: props.devStack.stackName,
+    //             stackName: props.devStack.stackName,
+    //             templatePath: cdkBuildOutput.atPath(`cdk.out/${props.devStack.stackName}.template.json`),
+    //             adminPermissions: true,
+    //             region: props.devStack.region,
+    //           }),
+    //         ],
+    //       },
+    //       // {
+    //       //   stageName: 'Prod',
+    //       //   actions: [
+    //       //     new codepipeline_actions.CodeBuildAction({
+    //       //       actionName: `Deploy${props.prodStack.stackName}`,
+    //       //       project: deployProdProject,
+    //       //       input: cdkBuildOutput,
+    //       //     }),
+    //       //   ],
+    //       // },
+    //     ],
+    //     restartExecutionOnUpdate: true,
+    //   });
   }
 }
 
